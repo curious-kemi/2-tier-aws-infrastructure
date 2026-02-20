@@ -8,9 +8,10 @@ resource "random_password" "db_password" {
 
 #Secret manager for database
 resource "aws_secretsmanager_secret" "database_cred" {
-  name        = "rds_credentials"
+  name        = "db_credentials"
   description = "Credentials for the Database"
   kms_key_id  = var.kms_key_id
+  recovery_window_in_days = 0
 
   tags = {
     Name = "rds-secret-manager"
