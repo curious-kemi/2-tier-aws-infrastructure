@@ -1,0 +1,9 @@
+
+---
+- name: Configure EC2 instance
+  hosts: app_servers
+  become: true
+  roles:
+    - common
+    - app_server
+    - jenkins

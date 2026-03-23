@@ -1,0 +1,30 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for jenkins
+- name: Install Java
+  ansible.builtin.yum:
+    name: java-17-amazon-corretto
+    state: present
+
+- name: Add jenkins to the repo
+  ansible.builtin.get_url:
+    url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
+    dest: /etc/yum.repos.d/jenkins.repo
+  
+
+- name: Import Jenkins GPG key
+  ansible.builtin.rpm_key:
+    key: https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+    state: present
+  become: true
+
+- name: Install Jenkins
+  ansible.builtin.yum:
+    name: jenkins
+    state: present
+
+- name: Start and enable Jenkins
+  ansible.builtin.service:
+    name: jenkins
+    state: started
+    enabled: true
