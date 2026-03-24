@@ -9,6 +9,20 @@ The platform provisions a complete environment for running a web application bac
 
 ---
 
+## 💡 Business Use Case
+
+This platform simulates a real-world voting system where users can securely submit and track votes. 
+
+The infrastructure ensures:
+- High availability for user access
+- Secure storage of voting data
+- Automated deployments for rapid updates
+- Protection of sensitive credentials
+
+This reflects how modern organizations build reliable and secure web platforms at scale.
+ 
+ ---
+
 ## 🎯 Objectives
 
 * Build a production-style infrastructure using **Terraform**
@@ -94,7 +108,7 @@ Ansible is used to configure the EC2 instance after provisioning:
 
 * **Common Role**: installs base dependencies (git, curl, etc.)
 * **Application Role**: installs and configures web server (Apache/Nginx)
-* **Jenkins Role (optional)**: sets up automation server
+* **Jenkins Role**: sets up automation server
 
 ### Outcome:
 
@@ -105,21 +119,36 @@ Ansible is used to configure the EC2 instance after provisioning:
 
 ## 🔄 CI/CD Pipeline
 
-The CI/CD pipeline automates the full deployment lifecycle:
+The CI/CD pipeline is implemented using **GitHub Actions and Jenkins**, combining modern cloud-native workflows with traditional automation capabilities.
 
-### Pipeline Stages:
+### Pipeline Responsibilities:
 
-1. Validate Terraform configuration
-2. Run security scans (Checkov, TFLint, detect-secrets)
-3. Terraform plan & apply
-4. Execute Ansible playbooks
-5. Deploy application to EC2
+#### GitHub Actions:
+- Triggered on code push
+- Validates Terraform configuration
+- Runs security scans (Checkov, TFLint, detect-secrets)
+- Initiates infrastructure provisioning workflow
+
+#### Jenkins:
+- Executes advanced automation tasks
+- Runs Ansible playbooks for EC2 configuration
+- Handles application deployment to EC2 instance
+- Provides flexibility for customizable job pipelines
+
+### Pipeline Flow:
+1. Developer pushes code to GitHub
+2. GitHub Actions triggers pipeline:
+   - Validates code and infrastructure
+   - Runs security checks
+3. Jenkins executes:
+   - Ansible configuration
+   - Application deployment
+4. Application becomes available via Load Balancer
 
 ### Benefits:
-
-* Eliminates manual deployment errors
-* Ensures consistent and repeatable deployments
-* Integrates security checks early in the process
+- Separation of concerns between CI and CD  
+- Flexible and extensible automation workflows  
+- Reduced manual intervention and deployment errors  
 
 ---
 
@@ -151,18 +180,20 @@ This project emphasizes real-world operational practices:
 * ⚙️ Repeatable environment provisioning
 
 ---
-
 ## 🧪 Application
 
-The infrastructure supports deployment of:
+This project deploys a **Voting App**, a web-based application that allows users to cast and track votes in real time.
 
-* Voting App (sample application)
-* OR WordPress (PHP-based application)
+### Key Features:
+- Users can submit votes through a web interface
+- Application stores vote data in an RDS database
+- Backend securely retrieves database credentials from AWS Secrets Manager
+- No sensitive information is hardcoded in the application
 
-### Key Feature:
-
-* Database credentials are dynamically retrieved from **Secrets Manager**
-* No credentials are hardcoded in application code
+### Architecture Behavior:
+- Frontend served via EC2 instance
+- Application connects to RDS in a private subnet
+- Credentials are dynamically injected at runtime
 
 ---
 
@@ -241,4 +272,4 @@ This project demonstrates the ability to:
 
 ## 👨‍💻 Author
 
-[Your Name]
+Oluwakemi Oshunkeye
