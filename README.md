@@ -270,6 +270,6 @@ This project demonstrates the ability to:
 
 ---
 
-## 👨‍💻 Author
+## Author
 
 Oluwakemi Oshunkeye
