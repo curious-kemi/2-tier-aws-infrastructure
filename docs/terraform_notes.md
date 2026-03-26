@@ -216,11 +216,11 @@ A single secret can hold multiple fields (host, username, password, port, databa
 
 ```json
 {
-  "username": "admin",
-  "password": "secret123",
-  "host": "mydb.rds.amazonaws.com",
+  "username": "[username]",
+  "password": "[password]",
+  "host": "rds.amazonaws.com",
   "port": "3306",
-  "dbname": "votingapp"
+  "dbname": "[database name]",
 }
 ```
 

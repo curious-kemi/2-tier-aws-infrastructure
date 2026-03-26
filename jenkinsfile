@@ -1,0 +1,21 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+
+        stage ('Security Scan') {
+            steps {
+                sh 'detect-secrets scan'
+                sh 'checkov -d .'
+                sh 'detect-secrets scan > .secrets.baseline'
+                sh 'tflint --init --chdir=terraform/'
+                sh 'tflint --chdir=terraform/'
+                sh 'terraform fmt -check -recursive'
+            }
+        }
+    }
+}

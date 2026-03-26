@@ -10,5 +10,8 @@ crash.log
 override.tf
 override.tf.json
 
+.env
+*.pem
+*.key
 
 

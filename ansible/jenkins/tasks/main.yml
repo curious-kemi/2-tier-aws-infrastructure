@@ -28,3 +28,34 @@
     name: jenkins
     state: started
     enabled: true
+
+- name: Install Python security tools
+  ansible.builtin.pip:
+    name:
+      - checkov
+      - detect-secrets
+    executable: pip3
+
+- name: Install tflint
+  ansible.builtin.shell: curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+  args:
+    creates: /usr/local/bin/tflint
+
+- name: Install yum-utils and shadow-utils
+  ansible.builtin.yum:
+    name:
+      - yum-utils
+      - shadow-utils
+    state: present
+
+- name: Add Hashicorp repository 
+  ansible.builtin.get_url:
+    url: https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+    dest: /etc/yum.repos.d/hashicorp.repo
+    mode: '0644'
+
+- name: Install Terraform
+  ansible.builtin.yum:
+    name:
+      - terraform
+    state: present
