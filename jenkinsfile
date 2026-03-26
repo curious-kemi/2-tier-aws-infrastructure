@@ -9,12 +9,38 @@ pipeline {
 
         stage ('Security Scan') {
             steps {
-                sh 'detect-secrets scan'
                 sh 'checkov -d .'
-                sh 'detect-secrets scan > .secrets.baseline'
+                sh 'detect-secrets scan --baseline .secrets.baseline'
                 sh 'tflint --init --chdir=terraform/'
                 sh 'tflint --chdir=terraform/'
-                sh 'terraform fmt -check -recursive'
+                sh 'terraform -chdir=terraform/ fmt -check -recursive'
+            }
+        }
+
+        stage('Plan') {
+            steps {
+                sh 'terraform -chdir=terraform/ plan -input=false -out=tfplan'
+                sh 'terraform -chdir=terraform/ show tfplan > tfplan.txt'
+                archiveArtifacts artifacts: 'tfplan.txt'
+            }
+        }
+
+        stage('Approval') {
+            steps {
+                input message: 'Review the plan above. Do you want to apply?', ok: 'Apply'
+            }
+         }
+
+        stage ('Apply') {
+            
+            steps {
+                sh 'terraform -chdir=terraform/ apply -input=false -auto-approve tfplan'
+            }
+        }
+
+        stage ('Configure') {
+            steps {
+                sh 'ansible-playbook -i ansible/inventory/hosts.ini ansible/playbook.yml -e "war_file=${WORKSPACE}/target/VotingApp.war" '
             }
         }
     }
