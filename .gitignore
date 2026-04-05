@@ -4,6 +4,7 @@
 *.tfstate
 *.tfstate.*
 
+
 crash.log
 *.tfvars
 *.tfvars.json
@@ -11,7 +12,9 @@ override.tf
 override.tf.json
 
 .env
+.DS_Store
 *.pem
 *.key
 
 
+.DS_Store
