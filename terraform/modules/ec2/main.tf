@@ -52,13 +52,21 @@ resource "aws_iam_role_policy" "ec2_policy" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
-      {
-        Action = [
-          "secretsmanager:GetSecretValue*",
-        ]
-        Effect   = "Allow"
-        Resource = var.database_secret_id
-      }
+  {
+    # Rule 1 - specific resource
+    Action   = ["secretsmanager:GetSecretValue*"]
+    Effect   = "Allow"
+    Resource = var.database_secret_id
+  },
+
+  {
+    # Rule 2 - all resources
+    Action   = [
+      "ec2:DescribeInstances",
+      "ec2:DescribeTags"]
+    Effect   = "Allow"
+    Resource = "*"
+  }
     ]
   })
 } 
