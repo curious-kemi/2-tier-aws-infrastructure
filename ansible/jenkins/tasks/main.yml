@@ -48,6 +48,11 @@
       - shadow-utils
     state: present
 
+- name: Install amazon.aws collection
+  ansible.builtin.shell: ansible-galaxy collection install amazon.aws
+  args:
+    creates: ~/.ansible/collections/ansible_collections/amazon/aws
+
 - name: Add Hashicorp repository 
   ansible.builtin.get_url:
     url: https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
@@ -59,3 +64,4 @@
     name:
       - terraform
     state: present
+

@@ -40,7 +40,7 @@ pipeline {
 
         stage ('Configure') {
             steps {
-                sh 'ansible-playbook -i ansible/inventory/hosts.ini ansible/playbook.yml -e "war_file=${WORKSPACE}/target/VotingApp.war" '
+                sh 'ansible-playbook -i ansible/inventory/aws_ec2. ansible/playbook.yml -e "war_file=${WORKSPACE}/target/VotingApp.war" '
             }
         }
     }

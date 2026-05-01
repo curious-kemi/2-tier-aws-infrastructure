@@ -1,0 +1,24 @@
+---
+
+plugin: amazon.aws.aws_ec2
+
+# This sets the region. If empty (the default) default this will include all regions, except possibly
+# restricted ones like us-gov-west-1 and cn-north-1.
+regions:
+- us-east-1
+
+
+# Only discover production instances managed by Ansible
+filters:
+  instance-state-name: running
+  "tag:Name": 
+    - module-ec2-instance-*
+
+
+hostnames:
+  - private-ip-address
+
+compose:
+  ansible_user: "'ec2-user'"
+  ansible_ssh_private_key_file: "'~/.ssh/ooshun-key.pem'"
+
