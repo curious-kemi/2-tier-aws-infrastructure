@@ -21,9 +21,13 @@ resource "aws_secretsmanager_secret" "database_cred" {
 #secret manager - secret version
 resource "aws_secretsmanager_secret_version" "db_credentials_version" {
   secret_id = aws_secretsmanager_secret.database_cred.id
-  secret_string = random_password.db_password.result
-    }
-  
+  secret_string = jsonencode({
+  host     = aws_db_instance.rds_instance.address
+  username = var.db_username
+  password = random_password.db_password.result
+  dbname   = "votingapp"
+})
+}
 
 
 
