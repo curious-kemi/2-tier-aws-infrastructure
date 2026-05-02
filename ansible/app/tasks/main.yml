@@ -1,32 +1,21 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # tasks file for app
-- name: Install Tomcat
+- name: Install Java
   ansible.builtin.yum:
-    name: tomcat
+    name: java-17-amazon-corretto
     state: present
 
-- name: Start and enable Tomcat
-  ansible.builtin.service:
-    name: tomcat
-    state: started
-    enabled: true
+- name: Create the app directory
+  ansible.builtin.file:
+    path: /opt/votingapp
+    state: directory
+    mode: '0755'
 
-- name: Fetch and parse secret
-  ansible.builtin.set_fact:
-    db_creds: "{{ lookup('amazon.aws.secretsmanager_secret', 'db_credentials') | from_json }}"
-  no_log: true
-
-- name: Create environment file
-  ansible.builtin.template:
-    src: setenv.sh.j2
-    dest: /opt/tomcat/bin/setenv.sh
-    mode: 0600
-
-- name: Copy the war file from jenkins to tomcat
+- name: Copy the jar file from jenkins to tomcat
   ansible.builtin.copy:
-    src: "{{war_file}}"
-    dest: /usr/share/tomcat/webapps/VotingApp.war
+    src: "{{ jar_file }}"
+    dest: /opt/votingapp/votingapp.jar
   
 - name: Restart Tomcat
   ansible.builtin.service:
