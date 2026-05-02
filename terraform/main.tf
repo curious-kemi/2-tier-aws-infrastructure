@@ -26,7 +26,7 @@ module "vpc" {
 module "secret_manager" {
   source = "./modules/secret_manager"
   kms_key_id = module.secret_manager.kms_key
-
+  db_username            = var.db_username
 }
 
 # Database Module
