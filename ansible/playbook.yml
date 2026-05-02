@@ -6,4 +6,6 @@
   roles:
     - common
     - app_server
-    - jenkins
+   
+   # - jenkins (removing jenkins because i'll be manually setting up the
+   # ec2 for jenkins to run...git)
