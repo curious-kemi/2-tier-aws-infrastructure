@@ -8,18 +8,24 @@
 
 - name: Create the app directory
   ansible.builtin.file:
-    path: /opt/votingapp
+    path: "{{ app_dir }}"
     state: directory
     mode: '0755'
 
 - name: Copy the jar file from jenkins to tomcat
   ansible.builtin.copy:
     src: "{{ jar_file }}"
-    dest: /opt/votingapp/votingapp.jar
+    dest: "{{ app_dir }}/{{ app_name }}.jar"
+
+- name: Create systemd service file from template
+  ansible.builtin.template:
+    src: votingapp.service.j2
+    dest: "/etc/systemd/system/{{ app_name }}.service"  # /etc/systemd/system/ is where systemd looks for service files on Linux.
   
-- name: Restart Tomcat
-  ansible.builtin.service:
-    name: tomcat
-    state: restarted
+- name: Ensure service is enabled and started
+  ansible.builtin.systemd:
+    name: "{{ app_name }}"
+    state: started
     enabled: true
+    daemon_reload: true 
     
