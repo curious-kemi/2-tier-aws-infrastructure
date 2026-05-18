@@ -16,11 +16,13 @@
   ansible.builtin.copy:
     src: "{{ jar_file }}"
     dest: "{{ app_dir }}/{{ app_name }}.jar"
+  notify: Restart votingapp
 
 - name: Create systemd service file from template
   ansible.builtin.template:
     src: votingapp.service.j2
     dest: "/etc/systemd/system/{{ app_name }}.service"  # /etc/systemd/system/ is where systemd looks for service files on Linux.
+  notify: Restart votingapp
   
 - name: Ensure service is enabled and started
   ansible.builtin.systemd:

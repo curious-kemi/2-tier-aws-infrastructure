@@ -1,3 +1,9 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # handlers file for app
+
+- name: Restart votingapp
+  ansible.builtin.systemd:
+    name: "{{ app_name }}"
+    state: restarted
+    daemon_reload: true
