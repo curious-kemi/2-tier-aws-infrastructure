@@ -4,7 +4,7 @@ variable "alb_security_group" {
 }
 
 variable "alb_subnet_ids" {
-    type = list(string)
+  type        = list(string)
   description = "subnets for the load balancer"
 }
 
@@ -15,6 +15,6 @@ variable "vpc_id" {
 
 
 variable "target_instance_ids" {
-    type = list(string)
+  type        = list(string)
   description = "ec2 instances to add to the target group"
 }

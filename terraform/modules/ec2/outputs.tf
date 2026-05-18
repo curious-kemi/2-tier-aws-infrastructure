@@ -6,3 +6,7 @@ output "app_instances" {
 output "ec2_private_ips" {
   value = aws_instance.ec2_instances[*].private_ip
 }
+
+output "jenkins_public_ip" {
+  value = aws_instance.jenkins.public_ip
+}

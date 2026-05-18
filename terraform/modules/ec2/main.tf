@@ -1,24 +1,24 @@
 
 # create 2 ec2 instances
 resource "aws_instance" "ec2_instances" {
-  count = length(var.app_subnet_ids)
+  count         = length(var.app_subnet_ids)
   ami           = var.ami_value
   instance_type = var.instance_type_value
 
   vpc_security_group_ids = var.app_security_group_id
-  subnet_id = var.app_subnet_ids[count.index]
-  availability_zone = var.az[count.index]
+  subnet_id              = var.app_subnet_ids[count.index]
+  availability_zone      = var.az[count.index]
 
-  iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
-  key_name = var.key_name 
- 
+  iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
+  key_name             = var.key_name
+
 
   tags = {
     Name = "module-ec2-instance-${count.index + 1}"
   }
 }
 
-#create an iam role 
+#create an iam role for the app ec2
 resource "aws_iam_role" "ec2_role" {
   name = "ec2_role"
 
@@ -52,27 +52,96 @@ resource "aws_iam_role_policy" "ec2_policy" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
-  {
-    # Rule 1 - specific resource
-    Action   = ["secretsmanager:GetSecretValue*"]
-    Effect   = "Allow"
-    Resource = var.database_secret_id
-  },
+      {
+        # Rule 1 - specific resource
+        Action   = ["secretsmanager:GetSecretValue*"]
+        Effect   = "Allow"
+        Resource = var.database_secret_id
+      },
 
-  {
-    # Rule 2 - all resources
-    Action   = [
-      "ec2:DescribeInstances",
-      "ec2:DescribeTags"]
-    Effect   = "Allow"
-    Resource = "*"
-  }
+      {
+        # Rule 2 - all resources
+        Action = [
+          "ec2:DescribeInstances",
+        "ec2:DescribeTags"]
+        Effect   = "Allow"
+        Resource = "*"
+      }
     ]
   })
-} 
+}
 
 #create an instance profile
 resource "aws_iam_instance_profile" "ec2_profile" {
   name = "ec2_profile"
   role = aws_iam_role.ec2_role.name
 }
+
+
+#create an ec2 instance to host jenkins
+# Jenkins server
+resource "aws_instance" "jenkins" {
+  ami                    = var.ami_value
+  instance_type          = var.jenkins_instance_type
+  subnet_id              = var.jenkins_subnet_id
+  vpc_security_group_ids = var.jenkins_security_group_id
+  iam_instance_profile   = aws_iam_instance_profile.jenkins_profile.name
+  key_name               = var.key_name
+
+  tags = {
+    Name = "jenkins-server"
+  }
+}
+
+#create an iam role for the jenkins
+resource "aws_iam_role" "jenkins_role" {
+  name = "jenkins-role"
+
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  tags = {
+    tag-key = "tag-value"
+  }
+}
+
+#create the permission policy for jenkins
+resource "aws_iam_role_policy" "jenkins_policy" {
+  name = "jenkins_policy"
+  role = aws_iam_role.jenkins_role.id
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+
+      {
+        # Rule 1 - all resources
+        Action = [
+          "ec2:DescribeInstances",
+        "ec2:DescribeTags"]
+        Effect   = "Allow"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+#create an instance profile for the jenkins
+resource "aws_iam_instance_profile" "jenkins_profile" {
+  name = "jenkins_profile"
+  role = aws_iam_role.jenkins_role.name
+}
+

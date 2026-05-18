@@ -2,20 +2,20 @@ output "ec2_subnet_ids" {
   value = aws_subnet.private_app[*].id
 }
 
-output "ec2_security_group_id"{
-value = aws_security_group.app-server-SG.id
+output "ec2_security_group_id" {
+  value = aws_security_group.app-server-SG.id
 }
 
 output "db_subnet_group" {
-    value = aws_db_subnet_group.data_base.name
+  value = aws_db_subnet_group.data_base.name
 }
 
 output "alb_security_group" {
-    value = aws_security_group.ALB-SG.id
+  value = aws_security_group.ALB-SG.id
 }
 
 output "alb_subnets" {
-    value = aws_subnet.public_alb[*].id
+  value = aws_subnet.public_alb[*].id
 }
 
 output "vpc_id" {
@@ -24,4 +24,13 @@ output "vpc_id" {
 
 output "db_security_group" {
   value = aws_security_group.rds-sg.id
+}
+
+#jenkins
+output "public_subnet_id" {
+  value = aws_subnet.public_alb[0].id
+}
+
+output "jenkins_sg_id" {
+  value = aws_security_group.jenkins-sg.id
 }

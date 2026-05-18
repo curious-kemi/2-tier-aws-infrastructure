@@ -6,7 +6,7 @@ data "aws_secretsmanager_secret" "database_cred" {
 }
 
 data "aws_secretsmanager_secret_version" "db_credentials_version" {
-  secret_id = data.aws_secretsmanager_secret.database_cred.id  #fixed. it was without "data" before
+  secret_id = data.aws_secretsmanager_secret.database_cred.id #fixed. it was without "data" before
 }
 
 
@@ -14,7 +14,7 @@ data "aws_secretsmanager_secret_version" "db_credentials_version" {
 resource "aws_db_instance" "rds_instance" {
   identifier             = "prod-rds-instance"
   instance_class         = var.instance_class
-  allocated_storage      = var.allocated_storage   # disk space
+  allocated_storage      = var.allocated_storage # disk space
   engine                 = var.engine
   engine_version         = var.engine_version
   storage_type           = var.storage_type
@@ -25,7 +25,7 @@ resource "aws_db_instance" "rds_instance" {
   vpc_security_group_ids = [var.db_security_group]
   publicly_accessible    = false
   skip_final_snapshot    = true
-  storage_encrypted = true
+  storage_encrypted      = true
 
   tags = {
     Name = "Database instance"

@@ -6,7 +6,7 @@ resource "aws_vpc" "prod-vpc" {
 
   tags = {
     Name = "production"
- }
+  }
 }
 
 #  create the public subnets for ALB
@@ -79,7 +79,7 @@ resource "aws_db_subnet_group" "data_base" {
 
 
 #  create an internet gateway
- resource "aws_internet_gateway" "my-first-gateway" {
+resource "aws_internet_gateway" "my-first-gateway" {
   vpc_id = aws_vpc.prod-vpc.id
 
   tags = {
@@ -89,17 +89,17 @@ resource "aws_db_subnet_group" "data_base" {
 
 # create an elastic IP per AZ
 resource "aws_eip" "elastic_ip" {
-    count   = length(var.az)
-    domain   = "vpc"
+  count  = length(var.az)
+  domain = "vpc"
 
-    tags = {
-        Name = "eip-nat-${var.az[count.index]}"
-    }
+  tags = {
+    Name = "eip-nat-${var.az[count.index]}"
+  }
 }
 
 # create NAT gateways
 resource "aws_nat_gateway" "my-first-nat" {
-  count = length(var.az)
+  count         = length(var.az)
   allocation_id = aws_eip.elastic_ip[count.index].id
   subnet_id     = aws_subnet.nat_gateway[count.index].id
 
@@ -129,7 +129,7 @@ resource "aws_route_table" "private_route" {
   count  = 2
   vpc_id = aws_vpc.prod-vpc.id
 
-# without this route, instances in the private subnet cannot reach the Internet, even if the NAT exists.
+  # without this route, instances in the private subnet cannot reach the Internet, even if the NAT exists.
   route {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.my-first-nat[count.index].id
@@ -139,7 +139,7 @@ resource "aws_route_table" "private_route" {
 
 #  Associate ALB public subnets with route table
 resource "aws_route_table_association" "alb_public_route" {
-  count = length(aws_subnet.public_alb)
+  count          = length(aws_subnet.public_alb)
   subnet_id      = aws_subnet.public_alb[count.index].id
   route_table_id = aws_route_table.public-route.id
 }
@@ -147,7 +147,7 @@ resource "aws_route_table_association" "alb_public_route" {
 
 #  Associate NAT public subnets with route table
 resource "aws_route_table_association" "nat_public_route" {
-  count = length(aws_subnet.nat_gateway)
+  count          = length(aws_subnet.nat_gateway)
   subnet_id      = aws_subnet.nat_gateway[count.index].id
   route_table_id = aws_route_table.public-route.id
 }
@@ -155,14 +155,14 @@ resource "aws_route_table_association" "nat_public_route" {
 
 # Associate app subnets(private) with route table
 resource "aws_route_table_association" "app_private_route" {
-  count = length(aws_subnet.private_app)
+  count          = length(aws_subnet.private_app)
   subnet_id      = aws_subnet.private_app[count.index].id
   route_table_id = aws_route_table.private_route[count.index].id
 }
 
 # Associate database subnets with route table
 resource "aws_route_table_association" "db_route" {
-    count = length(aws_subnet.private_db)
+  count          = length(aws_subnet.private_db)
   subnet_id      = aws_subnet.private_db[count.index].id
   route_table_id = aws_route_table.private_route[count.index].id
 }
@@ -177,7 +177,7 @@ resource "aws_security_group" "ALB-SG" {
 
 #inbound rule [internet to the LB]
 resource "aws_security_group_rule" "app-alb-ingress" {
-  description = "allow http from the internet to the LB"
+  description       = "allow http from the internet to the LB"
   type              = "ingress"
   from_port         = 80
   to_port           = 80
@@ -197,12 +197,12 @@ resource "aws_security_group" "app-server-SG" {
 
 #inbound rule for LB to the ec2 instance
 resource "aws_security_group_rule" "app-ingress_from_alb" {
-    description = "allow traffic from the ALB to the EC2 instance"
-  type              = "ingress"
-  from_port         = 80
-  to_port           = 80
-  protocol          = "tcp"
-  security_group_id = aws_security_group.app-server-SG.id
+  description              = "allow traffic from the ALB to the EC2 instance"
+  type                     = "ingress"
+  from_port                = 80
+  to_port                  = 80
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.app-server-SG.id
   source_security_group_id = aws_security_group.ALB-SG.id
 }
 
@@ -227,14 +227,56 @@ resource "aws_security_group" "rds-sg" {
 
 # Create Security Group to allow traffic from ec2 instance to database server
 resource "aws_security_group_rule" "db-ingress" {
-  type              = "ingress"
-  from_port         = 3306
-  to_port           = 3306
-  protocol          = "tcp"
-  security_group_id = aws_security_group.rds-sg.id
+  type                     = "ingress"
+  from_port                = 3306
+  to_port                  = 3306
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.rds-sg.id
   source_security_group_id = aws_security_group.app-server-SG.id
 }
 
+
+# Jenkins Security Group
+resource "aws_security_group" "jenkins-sg" {
+  description = "Allow access to Jenkins server"
+  vpc_id      = aws_vpc.prod-vpc.id
+
+  tags = {
+    Name = "jenkins-sg"
+  }
+}
+
+# Jenkins UI access - port 8080
+resource "aws_security_group_rule" "jenkins-ui-ingress" {
+  description       = "Allow Jenkins UI access from my IP"
+  type              = "ingress"
+  from_port         = 8080
+  to_port           = 8080
+  protocol          = "tcp"
+  cidr_blocks       = [var.my_ip]
+  security_group_id = aws_security_group.jenkins-sg.id
+}
+
+# Jenkins SSH access - port 22
+resource "aws_security_group_rule" "jenkins-ssh-ingress" {
+  description       = "Allow SSH access from my IP"
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  cidr_blocks       = [var.my_ip]
+  security_group_id = aws_security_group.jenkins-sg.id
+}
+
+# Jenkins outbound - allow all
+resource "aws_security_group_rule" "jenkins-egress" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.jenkins-sg.id
+}
 
 
 

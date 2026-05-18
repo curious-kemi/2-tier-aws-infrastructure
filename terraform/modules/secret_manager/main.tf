@@ -8,9 +8,9 @@ resource "random_password" "db_password" {
 
 #Secret manager for database
 resource "aws_secretsmanager_secret" "database_cred" {
-  name        = "db_credentials"
-  description = "Credentials for the Database"
-  kms_key_id  = var.kms_key_id
+  name                    = "db_credentials"
+  description             = "Credentials for the Database"
+  kms_key_id              = var.kms_key_id
   recovery_window_in_days = 0
 
   tags = {
@@ -22,11 +22,12 @@ resource "aws_secretsmanager_secret" "database_cred" {
 resource "aws_secretsmanager_secret_version" "db_credentials_version" {
   secret_id = aws_secretsmanager_secret.database_cred.id
   secret_string = jsonencode({
-  host     = aws_db_instance.rds_instance.address
-  username = var.db_username
-  password = random_password.db_password.result
-  dbname   = "votingapp"
-})
+    host     = var.db_host
+    username = var.db_username
+    password = random_password.db_password.result
+    port = var.db_port
+    dbname   = "votingapp"
+  })
 }
 
 

@@ -1,32 +1,38 @@
 
 # EC2 Module
 module "ec2_instance" {
-  source                = "./modules/ec2"
-  ami_value             = var.ami_value
-  instance_type_value   = var.instance_type_value
-  app_security_group_id = [module.vpc.ec2_security_group_id]
-  app_subnet_ids        = module.vpc.ec2_subnet_ids
-  database_secret_id    = module.secret_manager.database_secret_id
-  az                    = var.az
-  key_name              = var.key_name
+  source                    = "./modules/ec2"
+  ami_value                 = var.ami_value
+  instance_type_value       = var.instance_type_value
+  app_security_group_id     = [module.vpc.ec2_security_group_id]
+  app_subnet_ids            = module.vpc.ec2_subnet_ids
+  database_secret_id        = module.secret_manager.database_secret_id
+  az                        = var.az
+  key_name                  = var.key_name
+  jenkins_subnet_id         = module.vpc.alb_subnets[0]
+  jenkins_security_group_id = [module.vpc.jenkins_sg_id]
+  jenkins_instance_type     = var.jenkins_instance_type
 }
 
 # VPC Module
 module "vpc" {
-  source                = "./modules/vpc"
-  az                    = var.az
-  vpc_cidr              = var.vpc_cidr
-  public_subnet_cidrs   = var.public_subnet_cidrs
-  private_subnet_cidrs  = var.private_subnet_cidrs
-  db_subnet_cidrs       = var.db_subnet_cidrs
-  nat_subnet_cidrs      = var.nat_subnet_cidrs
+  source               = "./modules/vpc"
+  az                   = var.az
+  vpc_cidr             = var.vpc_cidr
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
+  db_subnet_cidrs      = var.db_subnet_cidrs
+  nat_subnet_cidrs     = var.nat_subnet_cidrs
+  my_ip                = var.my_ip
 }
 
 # Secret Manager Module
 module "secret_manager" {
-  source = "./modules/secret_manager"
-  kms_key_id = module.secret_manager.kms_key
-  db_username            = var.db_username
+  source      = "./modules/secret_manager"
+  kms_key_id  = module.secret_manager.kms_key
+  db_username = var.db_username
+  db_host = module.rds.rds_address
+  db_port = module.rds.rds_port
 }
 
 # Database Module
@@ -46,9 +52,9 @@ module "rds" {
 
 # Load Balancer Module
 module "alb" {
-  source = "./modules/ALB"
-  alb_security_group = module.vpc.alb_security_group
-  alb_subnet_ids = module.vpc.alb_subnets
-  vpc_id = module.vpc.vpc_id
+  source              = "./modules/ALB"
+  alb_security_group  = module.vpc.alb_security_group
+  alb_subnet_ids      = module.vpc.alb_subnets
+  vpc_id              = module.vpc.vpc_id
   target_instance_ids = module.ec2_instance.app_instances
 }
