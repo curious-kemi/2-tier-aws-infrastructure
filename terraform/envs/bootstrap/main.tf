@@ -10,3 +10,14 @@ module "jenkins-ec2" {
 }
 
 
+# VPC Module
+module "vpc" {
+  source               = "../../modules/vpc"
+  az                   = var.az
+  vpc_cidr             = var.vpc_cidr
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
+  db_subnet_cidrs      = var.db_subnet_cidrs
+  nat_subnet_cidrs     = var.nat_subnet_cidrs
+  my_ip                = var.my_ip
+}

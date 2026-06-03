@@ -1,6 +1,6 @@
 
 
-# EC2 Variables
+# Jenkins EC2 Variables
 variable "ami_value" {
   description = "value for the ami"
 }
@@ -22,4 +22,32 @@ variable "jenkins_instance_type" {
   description = "Instance type for Jenkins server"
   type        = string
   default     = "t2.medium"
+}
+
+
+
+#VPC Variables 
+variable "vpc_cidr" {
+  description = "CIDR block range for vpc"
+}
+
+variable "public_subnet_cidrs" {
+  description = "the cidr range for the public subnet"
+}
+
+
+variable "private_subnet_cidrs" {
+  description = "the cidr range for the private subnet"
+}
+
+variable "db_subnet_cidrs" {
+  description = "the cidr range for the RDS subnet"
+}
+
+variable "nat_subnet_cidrs" {
+  description = "the cidr range for the NAT subnet"
+}
+
+variable "az" {
+  description = "the availability zone "
 }
