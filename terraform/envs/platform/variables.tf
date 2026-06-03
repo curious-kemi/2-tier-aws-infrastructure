@@ -44,5 +44,7 @@ variable "key_name" {
   description = "key pair for the ec2 instances"
 }
 
-
+variable "az" {
+  description = "the availability zone "
+}
 

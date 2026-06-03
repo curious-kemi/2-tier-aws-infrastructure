@@ -1,4 +1,16 @@
 
+#App EC2 Module
+module "ec2_instance" {
+  source                = "../../modules/app-ec2"
+  ami_value             = var.ami_value
+  instance_type_value   = var.instance_type_value
+  app_security_group_id = [module.vpc.ec2_security_group_id]
+  app_subnet_ids        = module.vpc.ec2_subnet_ids
+  database_secret_id    = module.secret_manager.database_secret_id
+  az                    = var.az
+  key_name              = var.key_name
+}
+
 # Secret Manager Module
 module "secret_manager" {
   source      = "../../modules/secret_manager"
