@@ -30,21 +30,6 @@ variable "key_name" {
   type        = string
 }
 
-variable "jenkins_subnet_id" {
-  description = "Public subnet for Jenkins server"
-  type        = string
-}
-
-variable "jenkins_security_group_id" {
-  description = "Security group for Jenkins server"
-  type        = list(string)
-}
-
-variable "jenkins_instance_type" {
-  description = "Instance type for Jenkins server"
-  type        = string
-  default     = "t2.medium"
-}
 
 
 
