@@ -20,7 +20,7 @@ resource "aws_db_instance" "rds_instance" {
   storage_type           = var.storage_type
   multi_az               = true
   username               = var.db_username
-  password               = data.aws_secretsmanager_secret_version.db_credentials_version.secret_string
+  password               = var.db_password
   db_subnet_group_name   = var.data_base_subnet_group
   vpc_security_group_ids = [var.db_security_group]
   publicly_accessible    = false

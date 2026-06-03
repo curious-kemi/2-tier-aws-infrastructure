@@ -3,7 +3,7 @@ Description=VotingApp Spring Boot Application
 After=syslog.target network.target
 
 [Service]
-User=ec2-user
+User=ubuntu
 ExecStart=/usr/bin/java -jar /opt/votingapp/votingapp.jar
 SuccessExitStatus=143
 Restart=always

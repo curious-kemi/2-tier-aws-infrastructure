@@ -2,7 +2,7 @@
 #generates random password
 resource "random_password" "db_password" {
   length           = 16
-  special          = true
+  special          = false
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
@@ -22,10 +22,8 @@ resource "aws_secretsmanager_secret" "database_cred" {
 resource "aws_secretsmanager_secret_version" "db_credentials_version" {
   secret_id = aws_secretsmanager_secret.database_cred.id
   secret_string = jsonencode({
-    host     = var.db_host
     username = var.db_username
     password = random_password.db_password.result
-    port = var.db_port
     dbname   = "votingapp"
   })
 }

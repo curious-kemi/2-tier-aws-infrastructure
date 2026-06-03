@@ -1,4 +1,5 @@
 
+
 # EC2 Module
 module "ec2_instance" {
   source                    = "./modules/ec2"
@@ -31,8 +32,6 @@ module "secret_manager" {
   source      = "./modules/secret_manager"
   kms_key_id  = module.secret_manager.kms_key
   db_username = var.db_username
-  db_host = module.rds.rds_address
-  db_port = module.rds.rds_port
 }
 
 # Database Module
@@ -48,6 +47,8 @@ module "rds" {
   data_base_subnet_group = module.vpc.db_subnet_group
   secret_arn_db          = module.secret_manager.secret_arn
   db_security_group      = module.vpc.db_security_group
+  db_password            = module.secret_manager.db_password
+
 }
 
 # Load Balancer Module

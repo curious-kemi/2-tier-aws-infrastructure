@@ -1,0 +1,8 @@
+---
+# Run this manually once to configure Jenkins EC2
+- name: Configure Jenkins server
+  hosts: jenkins_server
+  become: true
+  roles:
+    - common
+    - jenkins
