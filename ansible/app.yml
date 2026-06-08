@@ -5,7 +5,7 @@
   become: true
   roles:
     - common
-    - app_server
+    - app
    
    # - jenkins (removing jenkins because i'll be manually setting up the
    # ec2 for jenkins to run...git)
