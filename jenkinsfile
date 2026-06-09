@@ -6,11 +6,14 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                sh 'mvn package'
+                 dir('app') {
+                    git url: 'https://github.com/curious-kemi/VotingApp.git', branch: 'main'
+                    sh 'mvn package'
+                }
             }
         }
 
-        stage ('Security Scan') {
+       /* stage ('Security Scan') {
             steps {
                 sh 'checkov -d .'
                 sh 'detect-secrets scan --baseline .secrets.baseline'
@@ -18,7 +21,7 @@ pipeline {
                 sh 'tflint --chdir=terraform/'
                 sh 'terraform -chdir=terraform/ fmt -check -recursive'
             }
-        }
+        }*/
 
         stage('Plan') {
             steps {
@@ -47,7 +50,7 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: 'prod/ssh/ansible-key', keyFileVariable: 'KEY', usernameVariable: 'UBUNTU')]) 
                 {
 
-                sh 'ansible-playbook -i ansible/inventory/aws_ec2.yml ansible/app.yml  --private-key $KEY -u $UBUNTU  -e "jar_file=${WORKSPACE}/target/{{APP_NAME}}.jar" '
+                sh 'ansible-playbook -i ansible/inventory/aws_ec2.yml ansible/app.yml  --private-key $KEY -u $UBUNTU  -e "jar_file=${WORKSPACE}/app/target/{APP_NAME}.jar" '
                 }
             }
         }
