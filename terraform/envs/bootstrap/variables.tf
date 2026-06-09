@@ -51,3 +51,21 @@ variable "nat_subnet_cidrs" {
 variable "az" {
   description = "the availability zone "
 }
+
+
+/* The variables for the jenkins iam policy (to access the ssh key in the 
+secret manager */
+variable "env" {
+  description = "Environment prefix matching Secrets Manager path"
+  type        = string
+}
+
+variable "account_id" {
+  description = "AWS account ID"
+  type        = string
+}
+
+variable "region" {
+  description = "AWS region"
+  type        = string
+}

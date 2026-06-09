@@ -30,6 +30,7 @@ resource "aws_iam_role" "jenkins_role" {
         }
       },
     ]
+   
   })
 
   tags = {
@@ -56,6 +57,18 @@ resource "aws_iam_role_policy" "jenkins_policy" {
         Resource = "*"
       }
     ]
+     
+    Statement = [{
+      Effect = "Allow"
+      Action = "secretsmanager:GetSecretValue"
+      Resource = "arn:aws:secretsmanager:${var.region}:${var.account_id}:secret:${var.env}/ssh/*"
+    }]
+
+     Statement = [{
+      Effect = "Allow"
+      Action = "secretsmanager:ListSecrets"
+          
+    }]
   })
 }
 

@@ -4,5 +4,6 @@ terraform {
     key    = "bootstrap/terraform.state"
     region = "us-east-1"
     use_lockfile = true
+    encrpyt = true
   }
 }

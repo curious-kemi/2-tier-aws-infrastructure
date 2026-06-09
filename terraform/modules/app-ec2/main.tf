@@ -62,7 +62,7 @@ resource "aws_iam_role_policy" "ec2_policy" {
       {
         # Rule 2 - all resources
         Action = [
-          "ec2:DescribeInstances",
+        "ec2:DescribeInstances",
         "ec2:DescribeTags"]
         Effect   = "Allow"
         Resource = "*"

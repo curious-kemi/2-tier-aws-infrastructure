@@ -12,7 +12,7 @@ variable "jenkins_security_group_id" {
 variable "jenkins_instance_type" {
   description = "Instance type for Jenkins server"
   type        = string
-  default     = "t2.medium"
+  default     = "t3.micro"
 }
 
 variable "key_name" {
@@ -23,4 +23,21 @@ variable "key_name" {
 
 variable "ami_value" {
   description = "value for the ami"
+}
+
+/* The variables for the jenkins iam policy (to access the ssh key in the 
+secret manager */
+variable "env" {
+  description = "Environment prefix matching Secrets Manager path"
+  type        = string
+}
+
+variable "account_id" {
+  description = "AWS account ID"
+  type        = string
+}
+
+variable "region" {
+  description = "AWS region"
+  type        = string
 }

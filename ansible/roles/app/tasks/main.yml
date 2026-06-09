@@ -2,8 +2,8 @@
 ---
 # tasks file for app
 - name: Install Java
-  ansible.builtin.yum:
-    name: java-17-amazon-corretto
+  ansible.builtin.apt:
+    name: openjdk-21-jdk
     state: present
 
 - name: Create the app directory

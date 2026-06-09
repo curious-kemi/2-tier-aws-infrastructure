@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    environment {
+        APP_NAME = 'votingapp'
+    }
     stages {
         stage('Build') {
             steps {
@@ -19,8 +22,8 @@ pipeline {
 
         stage('Plan') {
             steps {
-                sh 'terraform -chdir=terraform/ plan -input=false -out=tfplan'
-                sh 'terraform -chdir=terraform/ show tfplan > tfplan.txt'
+                sh 'terraform -chdir=terraform/envs/platform plan -input=false -out=tfplan'
+                sh 'terraform -chdir=terraform/envs/platform show tfplan > tfplan.txt'
                 archiveArtifacts artifacts: 'tfplan.txt'
             }
         }
@@ -34,14 +37,20 @@ pipeline {
         stage ('Apply') {
             
             steps {
-                sh 'terraform -chdir=terraform/ apply -input=false -auto-approve tfplan'
+                sh 'terraform -chdir=terraform/envs/platform apply -input=false -auto-approve tfplan'
             }
         }
 
         stage ('Configure') {
-            steps {
-                sh 'ansible-playbook -i ansible/inventory/aws_ec2.yml ansible/playbook.yml -e "jar_file=${WORKSPACE}/target/{{app_name}}.jar" '
+            steps 
+            {
+                withCredentials([sshUserPrivateKey(credentialsId: 'prod/ssh/ansible-key', keyFileVariable: 'KEY', usernameVariable: 'UBUNTU')]) 
+                {
+
+                sh 'ansible-playbook -i ansible/inventory/aws_ec2.yml ansible/app.yml  --private-key $KEY -u $UBUNTU  -e "jar_file=${WORKSPACE}/target/{{APP_NAME}}.jar" '
+                }
             }
         }
     }
 }
+

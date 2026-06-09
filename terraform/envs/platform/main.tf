@@ -2,7 +2,7 @@
 #App EC2 Module
 module "ec2_instance" {
   source                = "../../modules/app-ec2"
-  ami_value             = var.ami_value
+  ami_value             = data.aws_ami.ubuntu.id
   instance_type_value   = var.instance_type_value
   app_security_group_id = data.terraform_remote_state.bootstrap.outputs.app_security_group_id
   app_subnet_ids        = data.terraform_remote_state.bootstrap.outputs.app_subnet_ids
