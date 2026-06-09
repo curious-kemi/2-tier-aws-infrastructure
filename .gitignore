@@ -16,7 +16,7 @@ override.tf.json
 *.pem
 *.key
 *.ini
-
+*.tfstate
 
 
 .DS_Store
