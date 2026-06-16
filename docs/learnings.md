@@ -12,6 +12,7 @@ A structured breakdown of every problem encountered, root cause, solution, and k
 4. [Security Issues & How They Were Resolved](#security)
 5. [Secrets Management Integration](#secrets)
 6. [Jenkins & CI/CD Pipeline Problems](#jenkins)
+   - [Jenkins Multi-Repo & Workspace Problems](#jenkins-workspace)
 7. [Spring Boot App Deployment Problems](#springboot)
 8. [Pre-Commit & Code Scanning Problems](#precommit)
 9. [Architectural Decisions & Patterns Learned](#patterns)
@@ -423,6 +424,89 @@ These are completely different things:
 **Tag requirement:** Without the correct Jenkins-specific tags on the secret, credentials will not appear in Jenkins. Check the plugin documentation for exact required tags.
 
 **Field name requirement:** The `jsonencode()` in Terraform must use the exact field names the plugin expects (e.g., `privateKey` for SSH credentials — verify in plugin docs).
+
+**Single-field vs. multi-field secrets:** Not every secret needs `jsonencode()`. The AWS CLI example for an SSH key credential uses a raw string, not JSON:
+```bash
+aws secretsmanager create-secret --name 'ssh-key' \
+  --secret-string 'file://id_rsa' \
+  --tags 'Key=jenkins:credentials:type,Value=sshUserPrivateKey' 'Key=jenkins:credentials:username,Value=joe'
+```
+**Rule:** Single-field secrets (just a private key, just a token) → raw string. Multi-field secrets (host + username + password) → JSON, so the plugin/app can extract individual fields.
+
+---
+
+### Problem: SSH Key Doesn't Exist Yet When the Plugin Tries to Load It (Resolved)
+**What happened:** The plan was for Terraform to create the SSH private key and store it in Secrets Manager, then have the Jenkins credentials plugin retrieve it for Ansible. But the plugin loads credentials at Jenkins **startup** — before the pipeline runs. The key didn't exist yet at that point because Terraform hadn't run.
+
+**First instinct — split the pipeline:** Considered splitting into two pipeline runs so Terraform could create the key in one run before the plugin needed it in another. But the plugin doesn't continuously watch Secrets Manager in real time, and since Terraform is idempotent (it won't recreate an existing key), splitting added complexity without actually solving the timing problem.
+
+**Actual resolution — stage ordering inside one pipeline:** No split needed. The fix was recognizing *when* the plugin actually reads the credential versus when it loads its credential list:
+- `withCredentials` is scoped to the **Configure** stage
+- The **Apply** stage (Terraform) runs *before* Configure
+- By the time `withCredentials` tries to retrieve the credential in the Configure stage, Terraform has already created the secret with the correct tags in the Apply stage
+- The plugin retrieves it at that moment — not at pipeline start
+
+```groovy
+node {
+    withCredentials([sshUserPrivateKey(credentialsId: 'kola-key', keyFileVariable: 'KEY', usernameVariable: 'UBUNTU')]) {
+        // Ansible steps run here, after Apply has already created the secret
+    }
+}
+```
+
+**Critical detail:** The `credentialsId` value must exactly match the secret name set in the `aws_secretsmanager_secret` Terraform resource.
+
+**Lesson:** The plugin doesn't load *at Jenkins startup* in the way that blocks this pattern — it loads when `withCredentials` is evaluated in the pipeline. Sequencing stages correctly (Apply → Configure) solves the dependency without architectural changes.
+
+---
+
+## 6b. Jenkins Multi-Repo & Workspace Problems {#jenkins-workspace}
+
+### Problem: No Source Code to Build
+**What happened:** Jenkins ran `mvn package` to build the `.jar`, but the main repo only contained Terraform, Ansible, and the Jenkinsfile — no Java source, no `pom.xml`. The build failed immediately because there was nothing to compile.
+
+**Cascading failure:** Because the `.jar` was never created, the Configure stage also failed — Ansible tried to copy `${WORKSPACE}/target/${APP_NAME}.jar`, a file that didn't exist. One missing piece broke two stages.
+
+**Solution:** Use the `git` step (or `checkout scm`) inside the Jenkinsfile to pull the forked application repo during the Build stage, rather than assuming the source lives in the same repo as the infrastructure code.
+
+---
+
+### Problem: Checking Out a Second Repo Overwrote the Workspace
+**What happened:** Using the `git` step to check out the forked app repo replaced the entire current workspace — destroying the Terraform/Ansible files that other stages still needed.
+
+**Solution:** Use the `dir()` step to checkout the second repo into a named subdirectory instead of the workspace root:
+```groovy
+dir('app') {
+    git url: 'https://github.com/forked-repo.git'
+}
+```
+This keeps the infrastructure code and application code physically separated within the same workspace. The Configure stage's Ansible path was then updated to reflect the new nested `.jar` location (e.g., `app/target/votingapp.jar`).
+
+**Lessons learned:**
+- **Workspace is shared across all stages** — what one stage does affects every stage after it.
+- **`git checkout` replaces wherever it runs** — be deliberate about where in the workspace a checkout happens, or it silently destroys files needed later.
+- **File paths are relative to where the command runs** — `mvn package` puts the jar in `target/` relative to its execution directory; moving where it runs moves where every downstream reference needs to point.
+- **Sketch the expected workspace layout after each stage before writing pipeline code** — this catches collisions before they cost debugging time.
+
+**The bigger concept:** A pipeline is a sequence of state changes on a shared workspace. Every stage inherits exactly the state the previous stage left behind. Without deliberate control over that state, stages break each other in ways that are hard to trace back to a root cause.
+
+**Interview angle:** Mentioning deliberate workspace management (e.g., always checking out a second repo into a named subdirectory) signals real pipeline experience — the kind that comes from being burned by a workspace collision, not from following a tutorial.
+
+---
+
+### Problem: Jenkinsfile Not Found — Case Sensitivity Mismatch
+**What happened:** Jenkins failed immediately, unable to find the Jenkinsfile.
+
+**Root cause:** macOS and Windows filesystems are case-insensitive — `jenkinsfile` and `Jenkinsfile` look identical to the local OS. The file was created locally with a capital `J`, but when pushed, GitHub (Linux-based, case-sensitive) had actually stored it as `jenkinsfile` from an earlier commit. A normal rename in Finder or VS Code doesn't register as a change to Git on a case-insensitive system, since Git sees no filename difference — so the bad casing persisted on GitHub even after "fixing" it locally.
+
+**Solution:** Force Git to explicitly track the case change:
+```bash
+git mv jenkinsfile Jenkinsfile
+git commit -m "Fix Jenkinsfile casing"
+git push
+```
+
+**Lesson:** Always verify exact filenames on GitHub after pushing — especially convention-named files tools look for by exact string match: `Jenkinsfile`, `Dockerfile`, `Makefile`. A case-insensitive local rename will not propagate as a real change.
 
 ---
 
